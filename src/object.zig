@@ -1,4 +1,5 @@
 const std = @import("std");
+const print = std.debug.print;
 
 const errors = @import("errors.zig");
 const StdErr = errors.StdErr;
@@ -24,14 +25,14 @@ const Displacement = units.Displacement;
 pub const Object = struct {
     mass: MassValue,
     position: Position,
-    velocity: Velocity,
-    velocity3: VelocityVector3,
-    acceleration: Acceleration,
-    acceleration3: AccelerationVector3,
-    radius: DistanceValue,
+    velocity: ?Velocity,
+    velocity3: ?VelocityVector3,
+    acceleration: ?Acceleration,
+    acceleration3: ?AccelerationVector3,
+    radius: ?DistanceValue,
 };
 
-pub fn displacementDistance(i: *const Object, j: *const Object) struct { displacement3: Displacement, displacement: Displacement } {
+pub fn displacementDistance(i: *const Object, j: *const Object) struct { displacement: Displacement, distance: DistanceValue } {
     const delta: Vector3 = .{ .x = j.position.x.toMeter() - i.position.x.toMeter(), .y = j.position.y.toMeter() - i.position.y.toMeter(), .z = j.position.z.toMeter() - i.position.z.toMeter() };
     return .{
         .displacement = .{ .x = .{ .value = delta.x, .unit = .meter }, .y = .{ .value = delta.y, .unit = .meter }, .z = .{ .value = delta.z, .unit = .meter } },
@@ -60,8 +61,8 @@ pub fn gravitationalForce(
 ) StdErr!GravitationalForce {
     const d = displacementDistance(i, j);
 
-    const displacement: Displacement = d.displacement3;
-    const magnitude: f128 = d.displacement.value;
+    const displacement: Displacement = d.displacement;
+    const magnitude: f128 = d.distance.value;
 
     if (magnitude == 0.0 or !std.math.isFinite(magnitude)) {
         return StdErr.InvalidStateReached;
@@ -141,4 +142,61 @@ pub fn gravitationalForce(
             .f3 = j_force_vector,
         },
     };
+}
+
+test "gravitationalForce" {
+    const a: Object = .{
+        .position = .{ .x = .{ .value = 0, .unit = .meter }, .y = .{ .value = 0, .unit = .meter }, .z = .{ .value = 0, .unit = .meter } },
+        .mass = .{ .value = 2, .unit = .kilogram },
+        .acceleration = null,
+        .acceleration3 = null,
+        .radius = null,
+        .velocity = null,
+        .velocity3 = null,
+    };
+    const b: Object = .{
+        .position = .{ .x = .{ .value = 3, .unit = .meter }, .y = .{ .value = 4, .unit = .meter }, .z = .{ .value = 0, .unit = .meter } },
+        .mass = .{ .value = 3, .unit = .kilogram },
+        .acceleration = null,
+        .acceleration3 = null,
+        .radius = null,
+        .velocity = null,
+        .velocity3 = null,
+    };
+
+    const displacement_test = displacementDistance(&a, &b);
+    print("x: {}, y: {}, z: {}\nr: {} meters\n", .{
+        displacement_test.displacement.x.value,
+        displacement_test.displacement.y.value,
+        displacement_test.displacement.z.value,
+        displacement_test.distance.value,
+    });
+    const gravitational_test = try gravitationalForce(&a, &b);
+    print("i:\n  a: {} m/s^2\n  a3:\n    x: {} m/s^2 y: {} m/s^2, z: {} m/s^2\n", .{
+        gravitational_test.i.a.value,
+        gravitational_test.i.a3.x.value,
+        gravitational_test.i.a3.y.value,
+        gravitational_test.i.a3.z.value,
+    });
+
+    print("  f: {} N\n  f3:\n    x: {} N y: {} N, z: {} N\n", .{
+        gravitational_test.i.f.value,
+        gravitational_test.i.f3.x.value,
+        gravitational_test.i.f3.y.value,
+        gravitational_test.i.f3.z.value,
+    });
+
+    print("j:\n  a: {} m/s^2\n  a3:\n    x: {} m/s^2 y: {} m/s^2, z: {} m/s^2\n", .{
+        gravitational_test.j.a.value,
+        gravitational_test.j.a3.x.value,
+        gravitational_test.j.a3.y.value,
+        gravitational_test.j.a3.z.value,
+    });
+
+    print("  f: {} N\n  f3:\n    x: {} N y: {} N, z: {} N\n", .{
+        gravitational_test.j.f.value,
+        gravitational_test.j.f3.x.value,
+        gravitational_test.j.f3.y.value,
+        gravitational_test.j.f3.z.value,
+    });
 }

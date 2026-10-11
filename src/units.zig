@@ -17,11 +17,11 @@ pub const DistanceValue = struct {
     unit: Distance,
     const Self = @This();
 
-    pub fn toMeter(self: *Self) f128 {
+    pub fn toMeter(self: *const Self) f128 {
         return Distance.toMeter(self.unit) * self.value;
     }
 
-    pub fn convert(self: *Self, unit: Distance) f128 {
+    pub fn convert(self: *const Self, unit: Distance) f128 {
         return self.toMeter() / Distance.toMeter(unit);
     }
 };
@@ -121,11 +121,11 @@ pub const Velocity = struct {
 
     const Self = @This();
 
-    pub fn toMeter(self: *Self) f128 {
+    pub fn toMeter(self: *const Self) f128 {
         return Distance.toMeter(self.unit) * self.value;
     }
 
-    pub fn convert(self: *Self, unit: Distance) f128 {
+    pub fn convert(self: *const Self, unit: Distance) f128 {
         return self.toMeter() / Distance.toMeter(unit);
     }
 };
@@ -143,11 +143,11 @@ pub const Acceleration = struct {
 
     const Self = @This();
 
-    pub fn toMeter(self: *Self) f128 {
+    pub fn toMeter(self: *const Self) f128 {
         return Distance.toMeter(self.unit) * self.value;
     }
 
-    pub fn convert(self: *Self, unit: Distance) f128 {
+    pub fn convert(self: *const Self, unit: Distance) f128 {
         return self.toMeter() / Distance.toMeter(unit);
     }
 };
