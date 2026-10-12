@@ -1,71 +1,104 @@
 const std = @import("std");
 const Io = std.Io;
+const ArrayList = std.ArrayList;
 
 const universe_zig = @import("universe_zig");
 
+const units = universe_zig.units;
+const Distance = units.Distance;
+const DistanceValue = units.DistanceValue;
+const Force = units.Force;
+const ForceValue = units.ForceValue;
+const ForceVector3 = units.ForceVector3;
+const Mass = units.Mass;
+const MassValue = units.MassValue;
+const Time = units.Time;
+const TimeValue = units.TimeValue;
+const Vector3 = units.Vector3;
+const Velocity = units.Velocity;
+const VelocityVector3 = units.VelocityVector3;
+const Acceleration = units.Acceleration;
+const AccelerationVector3 = units.AccelerationVector3;
+const Position = units.Position;
+const Displacement = units.Displacement;
+
+const object = universe_zig.object;
+const Object = object.Object;
+const ProtoObject = object.ProtoObject;
+
+const solar_system_obj = universe_zig.solar_system_obj;
+
+const update_rate: i64 = @divFloor(1000, universe_zig.update_rate);
+
 pub fn main(init: std.process.Init) !void {
-    // Prints to stderr, unbuffered, ignoring potential errors.
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    const allocator = init.gpa;
+    var object_list: ArrayList(*Object) = ArrayList(*Object).empty;
+    defer object_list.deinit(allocator);
+    var io: Io = init.io;
+    var earth: Object = solar_system_obj.earth.place(
+        .{
+            .x = .{
+                .value = 1,
+                .unit = .au,
+            },
+            .y = .{
+                .value = 0,
+                .unit = .meter,
+            },
+            .z = .{
+                .value = 0,
+                .unit = .meter,
+            },
+        },
+        null,
+        .{
+            .x = .{ .value = 29.79, .unit = .kilometer, .time = .second },
+            .y = .{
+                .value = 0,
+                .unit = .meter,
+                .time = .second,
+            },
+            .z = .{
+                .value = 0,
+                .unit = .meter,
+                .time = .second,
+            },
+        },
+    );
+    var sun: Object = solar_system_obj.sun.place(
+        .{
+            .x = .{
+                .value = 0,
+                .unit = .meter,
+            },
+            .y = .{
+                .value = 0,
+                .unit = .meter,
+            },
+            .z = .{
+                .value = 0,
+                .unit = .meter,
+            },
+        },
+        null,
+        null,
+    );
+    try object_list.append(allocator, &earth);
+    try object_list.append(allocator, &sun);
 
-    // This is appropriate for anything that lives as long as the process.
-    const arena: std.mem.Allocator = init.arena.allocator();
+    const time_interval: TimeValue = .{ .value = 1, .unit = .hour };
+    const now = Io.Clock.real.now(io);
 
-    // Accessing command line arguments:
-    const args = try init.minimal.args.toSlice(arena);
-    for (args) |arg| {
-        std.log.info("arg: {s}", .{arg});
+    for (0..(@as(usize, @trunc(Time.toSecond(.year))) * 2)) |_| {
+        const start = now.toMilliseconds();
+        try universe_zig.updateObjects(allocator, &object_list, &time_interval);
+        for (object_list.items) |obj| {
+            obj.print();
+        }
+
+        try io.sleep(
+            .fromMilliseconds(@max(0, update_rate - (now.toMilliseconds() - start))),
+            .awake,
+        );
     }
-
-    // In order to do I/O operations need an `Io` instance.
-    const io = init.io;
-
-    // Stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    var stdout_buffer: [1024]u8 = undefined;
-    var stdout_file_writer: Io.File.Writer = .init(.stdout(), io, &stdout_buffer);
-    const stdout_writer = &stdout_file_writer.interface;
-
-    try universe_zig.printAnotherMessage(stdout_writer);
-
-    try stdout_writer.flush(); // Don't forget to flush!
-}
-
-test "simple test" {
-    const gpa = std.testing.allocator;
-    var list: std.ArrayList(i32) = .empty;
-    defer list.deinit(gpa); // Try commenting this out and see if zig detects the memory leak!
-    try list.append(gpa, 42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
-}
-
-test "fuzz example" {
-    try std.testing.fuzz({}, testOne, .{});
-}
-
-fn testOne(context: void, smith: *std.testing.Smith) !void {
-    _ = context;
-    // Try passing `--fuzz` to `zig build test` and see if it manages to fail this test case!
-
-    const gpa = std.testing.allocator;
-    var list: std.ArrayList(u8) = .empty;
-    defer list.deinit(gpa);
-    while (!smith.eos()) switch (smith.value(enum { add_data, dup_data })) {
-        .add_data => {
-            const slice = try list.addManyAsSlice(gpa, smith.value(u4));
-            smith.bytes(slice);
-        },
-        .dup_data => {
-            if (list.items.len == 0) continue;
-            if (list.items.len > std.math.maxInt(u32)) return error.SkipZigTest;
-            const len = smith.valueRangeAtMost(u32, 1, @min(32, list.items.len));
-            const off = smith.valueRangeAtMost(u32, 0, @intCast(list.items.len - len));
-            try list.appendSlice(gpa, list.items[off..][0..len]);
-            try std.testing.expectEqualSlices(
-                u8,
-                list.items[off..][0..len],
-                list.items[list.items.len - len ..],
-            );
-        },
-    };
 }

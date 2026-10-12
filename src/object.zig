@@ -1,5 +1,5 @@
 const std = @import("std");
-const print = std.debug.print;
+const debugPrint = std.debug.print;
 
 const errors = @import("errors.zig");
 const StdErr = errors.StdErr;
@@ -40,12 +40,57 @@ pub const Object = struct {
     }
 
     pub fn drift(self: *Self, half_timestep: *const TimeValue) void {
-        self.position.applyVelocity(&self.velocity3, half_timestep);
+        self.position.applyVelocityVector3(&self.velocity3, half_timestep);
         self.acceleration3 = .{
             .x = .{ .value = 0, .unit = .meter, .time = .second },
             .y = .{ .value = 0, .unit = .meter, .time = .second },
             .z = .{ .value = 0, .unit = .meter, .time = .second },
         };
+    }
+
+    pub fn print(self: *const Self) void {
+        const str =
+            \\name: {s}
+            \\  position: x: {} y: {} z: {}
+            \\  mass: {} kg
+            \\  radius: {} tonne
+            \\  velocity: {} m/s
+            \\  velocity3:
+            \\    x: {} m/s
+            \\    y: {} m/s
+            \\    z: {} m/s
+            \\  acceleration: {} m/s^2
+            \\  acceleration3:
+            \\    x: {} m/s^2
+            \\    y: {} m/s^2
+            \\    z: {} m/^2s
+            \\
+        ;
+        // \\  force: {} N\n
+        // \\  force3:\n
+        // \\    x: {} N\n
+        // \\    y: {} N\n
+        // \\    z: {} N\n
+        debugPrint(str, .{
+            self.name,
+            @trunc(self.mass.toKilogram()),
+            @trunc(self.radius.toMeter()),
+            @trunc(self.position.x.toMeter()),
+            @trunc(self.position.y.toMeter()),
+            @trunc(self.position.z.toMeter()),
+            @trunc(self.velocity.toMeterPerSecond()),
+            @trunc(self.velocity3.x.toMeterPerSecond()),
+            @trunc(self.velocity3.y.toMeterPerSecond()),
+            @trunc(self.velocity3.z.toMeterPerSecond()),
+            @trunc(self.acceleration.toMeterPerSecondSquared()),
+            @trunc(self.acceleration3.x.toMeterPerSecondSquared()),
+            @trunc(self.acceleration3.y.toMeterPerSecondSquared()),
+            @trunc(self.acceleration3.z.toMeterPerSecondSquared()),
+            // @trunc(self.force.toNewton()),
+            // @trunc(self.force3.x.toNewton()),
+            // @trunc(self.force3.y.toNewton()),
+            // @trunc(self.force3.z.toNewton()),
+        });
     }
 };
 
@@ -75,9 +120,9 @@ pub const ProtoObject = struct {
             },
             .force = .{ .value = 0, .unit = .newton },
             .force3 = .{
-                .{ .value = 0, .unit = .newton },
-                .{ .value = 0, .unit = .newton },
-                .{ .value = 0, .unit = .newton },
+                .x = .{ .value = 0, .unit = .newton },
+                .y = .{ .value = 0, .unit = .newton },
+                .z = .{ .value = 0, .unit = .newton },
             },
             .radius = self.radius,
         };

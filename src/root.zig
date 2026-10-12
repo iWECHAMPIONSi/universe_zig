@@ -1,10 +1,10 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 
-const errors = @import("errors.zig");
+pub const errors = @import("errors.zig");
 const StdErr = errors.StdErr;
 
-const units = @import("units.zig");
+pub const units = @import("units.zig");
 const Distance = units.Distance;
 const DistanceValue = units.DistanceValue;
 const Force = units.Force;
@@ -22,34 +22,36 @@ const AccelerationVector3 = units.AccelerationVector3;
 const Position = units.Position;
 const Displacement = units.Displacement;
 
-const object = @import("object.zig");
+pub const object = @import("object.zig");
 const Object = object.Object;
 const ProtoObject = object.ProtoObject;
 const gravitationalForce = object.gravitationalForce;
 const displacementDistance = object.displacementDistance;
 const GravitationalForceValue = object.GravitationalForceValue;
 
-pub var object_list: ArrayList(Object) = ArrayList(Object).empty;
+pub const solar_system_obj = @import("solar_system_obj.zig");
 
-pub fn updateObjects(allocator: std.mem.Allocator, elapsed_time: *const TimeValue) StdErr!void {
+pub const update_rate: i64 = 10;
+
+pub fn updateObjects(allocator: std.mem.Allocator, object_list: *ArrayList(*Object), elapsed_time: *const TimeValue) StdErr!void {
     const half_timestep: TimeValue = .{ .value = elapsed_time.toSecond(), .unit = .second };
     _ = allocator;
     for (object_list.items) |obj| {
         obj.kick(&half_timestep);
-        obj.drift(&elapsed_time);
+        obj.drift(elapsed_time);
     }
     for (0..object_list.items.len - 1, object_list.items[0 .. object_list.items.len - 1]) |index, i| {
         for (object_list.items[index + 1 .. object_list.items.len]) |j| {
-            const result: GravitationalForceValue = try gravitationalForce(&i, &j);
-            i.acceleration3 = units.addAccelerationVector3(&result.i.a3, &i.acceleration3);
-            i.acceleration = units.addAcceleration(&i.acceleration, &result.i.a);
-            i.force = units.addForce(&i.force, &result.i.f);
-            i.force3 = units.addForceVector3(&i.force3, &result.i.f3);
+            const result: GravitationalForceValue = try gravitationalForce(i, j);
+            i.*.acceleration3 = units.addAccelerationVector3(&result.i.a3, &i.acceleration3);
+            i.*.acceleration = units.addAcceleration(&i.acceleration, &result.i.a);
+            i.*.force = units.addForce(&i.force, &result.i.f);
+            i.*.force3 = units.addForceVector3(&i.force3, &result.i.f3);
 
-            j.acceleration3 = units.addAccelerationVector3(&result.j.a3, &j.acceleration3);
-            j.acceleration = units.addAcceleration(&j.acceleration, &result.j.a);
-            j.force = units.addForce(&j.force, &result.j.f);
-            j.force3 = units.addForceVector3(&j.force3, &result.j.f3);
+            j.*.acceleration3 = units.addAccelerationVector3(&result.j.a3, &j.acceleration3);
+            j.*.acceleration = units.addAcceleration(&j.acceleration, &result.j.a);
+            j.*.force = units.addForce(&j.force, &result.j.f);
+            j.*.force3 = units.addForceVector3(&j.force3, &result.j.f3);
         }
     }
 

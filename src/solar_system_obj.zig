@@ -1,7 +1,6 @@
 const std = @import("std");
 
-const errors = @import("errors.zig");
-const StdErr = errors.StdErr;
+// const errors = @import("errors.zig");
 
 const units = @import("units.zig");
 const Distance = units.Distance;

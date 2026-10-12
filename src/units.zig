@@ -24,6 +24,16 @@ pub const DistanceValue = struct {
     pub fn convert(self: *const Self, unit: Distance) f128 {
         return self.toMeter() / Distance.toMeter(unit);
     }
+
+    pub fn simplify(self: *const Self) Self {
+        if (self.toMeter() >= Distance.toMeter(.au)) {
+            return self.convert(.au);
+        }
+        if (self.toMeter() >= Distance.toMeter(.kilometer)) {
+            return self.convert(.kilometer);
+        }
+        return self.convert(.meter);
+    }
 };
 
 pub fn addDistance(a: *const DistanceValue, b: *const DistanceValue) DistanceValue {
@@ -55,6 +65,16 @@ pub const MassValue = struct {
 
     pub fn convert(self: *const Self, unit: Mass) f128 {
         return self.toKilogram() / Mass.toKilogram(unit);
+    }
+
+    pub fn simplify(self: *const Self) Self {
+        if (self.toKilogram() >= Mass.toKilogram(.solar_mass)) {
+            return self.convert(.solar_mass);
+        }
+        if (self.toKilogram() >= Mass.toKilogram(.tonne)) {
+            return self.convert(.tonne);
+        }
+        return self.convert(.kilogram);
     }
 };
 
@@ -185,6 +205,16 @@ pub const Velocity = struct {
         self.unit = .meter;
         self.time = .second;
     }
+
+    pub fn simplify(self: *const Self) Self {
+        if (self.toMeterPerSecond() >= Distance.toMeter(.au)) {
+            return .{ .value = self.toMeterPerSecond() / Distance.toMeter(.au), .unit = .au, .time = .second };
+        }
+        if (self.toMeterPerSecond() >= Distance.toMeter(.kilometer)) {
+            return .{ .value = self.toMeterPerSecond() / Distance.toMeter(.kilometer), .unit = .kilometer, .time = .second };
+        }
+        return .{ .value = self.toMeterPerSecond(), .unit = .meter, .time = .second };
+    }
 };
 
 pub fn addVelocity(a: *const Velocity, b: *const Velocity) Velocity {
@@ -250,6 +280,16 @@ pub const Acceleration = struct {
             .unit = .meter,
             .time = .second,
         };
+    }
+
+    pub fn simplify(self: *const Self) Self {
+        if (self.toMeterPerSecondSquared() >= Distance.toMeter(.au)) {
+            return .{ .value = self.toMeterPerSecondSquared() / Distance.toMeter(.au), .unit = .au, .time = .second };
+        }
+        if (self.toMeterPerSecondSquared() >= Distance.toMeter(.kilometer)) {
+            return .{ .value = self.toMeterPerSecondSquared() / Distance.toMeter(.kilometer), .unit = .kilometer, .time = .second };
+        }
+        return .{ .value = self.toMeterPerSecondSquared(), .unit = .meter, .time = .second };
     }
 };
 
