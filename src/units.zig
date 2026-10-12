@@ -26,6 +26,13 @@ pub const DistanceValue = struct {
     }
 };
 
+pub fn addDistance(a: *const DistanceValue, b: *const DistanceValue) DistanceValue {
+    return .{
+        .value = a.toMeter() + b.toMeter(),
+        .unit = .meter,
+    };
+}
+
 pub const Mass = enum(i113) {
     kilogram = 1,
     tonne = 1_000, // megagram
@@ -51,6 +58,13 @@ pub const MassValue = struct {
     }
 };
 
+pub fn addMass(a: *const MassValue, b: *const MassValue) MassValue {
+    return .{
+        .value = a.toKilogram() + b.toKilogram(),
+        .unit = .kilogram,
+    };
+}
+
 pub const Force = enum(i113) {
     newton = 1,
 
@@ -72,6 +86,13 @@ pub const ForceValue = struct {
         return self.toNewton() / Force.toNewton(unit);
     }
 };
+
+pub fn addForce(a: *const ForceValue, b: *const ForceValue) ForceValue {
+    return .{
+        .value = a.toNewton() + b.toNewton(),
+        .unit = .newton,
+    };
+}
 
 pub const Time = enum(i113) {
     second = 1,
@@ -100,6 +121,13 @@ pub const TimeValue = struct {
     }
 };
 
+pub fn addTime(a: *const TimeValue, b: *const TimeValue) TimeValue {
+    return .{
+        .value = a.toSecond() + b.toSecond(),
+        .unit = .second,
+    };
+}
+
 pub const Vector3 = struct {
     x: f128,
     y: f128,
@@ -121,20 +149,48 @@ pub const Velocity = struct {
 
     const Self = @This();
 
-    pub fn toMeter(self: *const Self) f128 {
-        return Distance.toMeter(self.unit) * self.value;
+    pub fn toMeterPerSecond(self: *const Self) f128 {
+        return Distance.toMeter(self.unit) * self.value / Time.toSecond(self.time);
     }
 
-    pub fn convert(self: *const Self, unit: Distance) f128 {
-        return self.toMeter() / Distance.toMeter(unit);
+    pub fn changeUnit(self: *const Self, unit: Distance) Self {
+        return .{
+            .value = self.value * (Distance.toMeter(unit) / Distance.toMeter(self.unit)),
+            .unit = unit,
+            .time = self.time,
+        };
+    }
+
+    pub fn changeTime(self: *const Self, unit: Time) Self {
+        return .{
+            .value = self.value * (Time.toSecond(unit) / Time.toSecond(self.time)),
+            .unit = self.unit,
+            .time = unit,
+        };
     }
 };
+
+pub fn addVelocity(a: *const Velocity, b: *const Velocity) Velocity {
+    return .{
+        .value = a.toMeterPerSecond() + b.toMeterPerSecond(),
+        .unit = .meter,
+        .time = .second,
+    };
+}
 
 pub const VelocityVector3 = struct {
     x: Velocity,
     y: Velocity,
     z: Velocity,
 };
+
+pub fn addVelocityVector3(a: *const VelocityVector3, b: *const VelocityVector3) VelocityVector3 {
+    return .{
+        .x = addVelocity(&a.x, &b.x),
+        .y = addVelocity(&a.y, &b.y),
+        .z = addVelocity(&a.z, &b.z),
+    };
+}
 
 pub const Acceleration = struct {
     value: f128,
@@ -143,20 +199,47 @@ pub const Acceleration = struct {
 
     const Self = @This();
 
-    pub fn toMeter(self: *const Self) f128 {
-        return Distance.toMeter(self.unit) * self.value;
+    pub fn toMeterPerSecondSquared(self: *const Self) f128 {
+        return Distance.toMeter(self.unit) * self.value / ((Time.toSecond(self.time) * Time.toSecond(self.time)));
     }
 
-    pub fn convert(self: *const Self, unit: Distance) f128 {
-        return self.toMeter() / Distance.toMeter(unit);
+    pub fn changeUnit(self: *const Self, unit: Distance) Self {
+        return .{
+            .value = self.value * (Distance.toMeter(unit) / Distance.toMeter(self.unit)),
+            .unit = unit,
+            .time = self.time,
+        };
+    }
+
+    pub fn changeTime(self: *const Self, unit: Time) Self {
+        return .{
+            .value = self.value * (Time.toSecond(unit) * Time.toSecond(unit)) / (Time.toSecond(self.time) * Time.toSecond(self.time)),
+            .unit = self.unit,
+            .time = unit,
+        };
     }
 };
 
+pub fn addAcceleration(a: *const Acceleration, b: *const Acceleration) Acceleration {
+    return .{
+        .value = a.toMeterPerSecondSquared() + b.toMeterPerSecondSquared(),
+        .unit = .meter,
+        .time = .second,
+    };
+}
 pub const AccelerationVector3 = struct {
     x: Acceleration,
     y: Acceleration,
     z: Acceleration,
 };
+
+pub fn addAccelerationVector3(a: *const AccelerationVector3, b: *const AccelerationVector3) AccelerationVector3 {
+    return .{
+        .x = addAcceleration(&a.x, &b.x),
+        .y = addAcceleration(&a.y, &b.y),
+        .z = addAcceleration(&a.z, &b.z),
+    };
+}
 
 pub const Displacement = struct {
     x: DistanceValue,
@@ -164,11 +247,27 @@ pub const Displacement = struct {
     z: DistanceValue,
 };
 
+pub fn addDisplacement(a: *const Displacement, b: *const Displacement) Displacement {
+    return .{
+        .x = addDistance(&a.x, &b.x),
+        .y = addDistance(&a.y, &b.y),
+        .z = addDistance(&a.z, &b.z),
+    };
+}
+
 pub const ForceVector3 = struct {
     x: ForceValue,
     y: ForceValue,
     z: ForceValue,
 };
+
+pub fn addForceVector3(a: *const ForceVector3, b: *const ForceVector3) ForceVector3 {
+    return .{
+        .x = addForce(&a.x, &b.x),
+        .y = addForce(&a.y, &b.y),
+        .z = addForce(&a.z, &b.z),
+    };
+}
 
 // =============== CONSTANTS =================
 

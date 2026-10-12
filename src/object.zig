@@ -30,6 +30,8 @@ pub const Object = struct {
     velocity3: VelocityVector3,
     acceleration: Acceleration,
     acceleration3: AccelerationVector3,
+    force: ForceValue,
+    force3: ForceVector3,
     radius: DistanceValue,
 };
 
@@ -40,7 +42,7 @@ pub const ProtoObject = struct {
 
     const Self = @This();
 
-    pub fn place(self: *const Self, position: Position, velocity: ?Velocity, velocity3: ?VelocityVector3, accel: ?Acceleration, accel3: AccelerationVector3) Object {
+    pub fn place(self: *const Self, position: Position, velocity: ?Velocity, velocity3: ?VelocityVector3) Object {
         return .{
             .name = self.name,
             .mass = self.mass,
@@ -51,11 +53,17 @@ pub const ProtoObject = struct {
                 .y = .{ .value = 0, .unit = .meter, .time = .second },
                 .z = .{ .value = 0, .unit = .meter, .time = .second },
             },
-            .acceleration = if (accel != null) accel.? else .{ .value = 0, .unit = .meter, .time = .second },
-            .acceleration3 = if (accel3 != null) accel3.? else .{
+            .acceleration = .{ .value = 0, .unit = .meter, .time = .second },
+            .acceleration3 = .{
                 .x = .{ .value = 0, .unit = .meter, .time = .second },
                 .y = .{ .value = 0, .unit = .meter, .time = .second },
                 .z = .{ .value = 0, .unit = .meter, .time = .second },
+            },
+            .force = .{ .value = 0, .unit = .newton },
+            .force3 = .{
+                .{ .value = 0, .unit = .newton },
+                .{ .value = 0, .unit = .newton },
+                .{ .value = 0, .unit = .newton },
             },
             .radius = self.radius,
         };
@@ -70,7 +78,7 @@ pub fn displacementDistance(i: *const Object, j: *const Object) struct { displac
     };
 }
 
-pub const GravitationalForce = struct {
+pub const GravitationalForceValue = struct {
     i: struct {
         a: Acceleration,
         a3: AccelerationVector3,
@@ -88,7 +96,7 @@ pub const GravitationalForce = struct {
 pub fn gravitationalForce(
     i: *const Object,
     j: *const Object,
-) StdErr!GravitationalForce {
+) StdErr!GravitationalForceValue {
     const d = displacementDistance(i, j);
 
     const displacement: Displacement = d.displacement;
