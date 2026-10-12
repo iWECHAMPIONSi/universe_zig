@@ -23,3 +23,16 @@ const Displacement = units.Displacement;
 
 const object = @import("object.zig");
 const Object = object.Object;
+const ProtoObject = object.ProtoObject;
+
+pub const earth: ProtoObject = .{
+    .name = "Earth",
+    .mass = .{ .value = 5.972e21, .unit = .tonne },
+    .radius = .{ .value = 6_371, .unit = .kilometer },
+};
+
+pub const sun: ProtoObject = .{
+    .name = "Sun",
+    .mass = .{ .value = 1, .unit = .solar_mass },
+    .radius = .{ .value = 695_700, .unit = .kilometer },
+};
