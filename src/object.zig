@@ -23,13 +23,14 @@ const Position = units.Position;
 const Displacement = units.Displacement;
 
 pub const Object = struct {
+    name: []const u8,
     mass: MassValue,
     position: Position,
-    velocity: ?Velocity,
-    velocity3: ?VelocityVector3,
-    acceleration: ?Acceleration,
-    acceleration3: ?AccelerationVector3,
-    radius: ?DistanceValue,
+    velocity: Velocity,
+    velocity3: VelocityVector3,
+    acceleration: Acceleration,
+    acceleration3: AccelerationVector3,
+    radius: DistanceValue,
 };
 
 pub fn displacementDistance(i: *const Object, j: *const Object) struct { displacement: Displacement, distance: DistanceValue } {
