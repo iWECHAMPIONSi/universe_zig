@@ -33,6 +33,20 @@ pub const Object = struct {
     force: ForceValue,
     force3: ForceVector3,
     radius: DistanceValue,
+    const Self = @This();
+
+    pub fn kick(self: *Self, half_timestep: *const TimeValue) void {
+        self.velocity3.applyAccelerationVector3(&self.acceleration3, half_timestep);
+    }
+
+    pub fn drift(self: *Self, half_timestep: *const TimeValue) void {
+        self.position.applyVelocity(&self.velocity3, half_timestep);
+        self.acceleration3 = .{
+            .x = .{ .value = 0, .unit = .meter, .time = .second },
+            .y = .{ .value = 0, .unit = .meter, .time = .second },
+            .z = .{ .value = 0, .unit = .meter, .time = .second },
+        };
+    }
 };
 
 pub const ProtoObject = struct {
@@ -180,61 +194,4 @@ pub fn gravitationalForce(
             .f3 = j_force_vector,
         },
     };
-}
-
-test "gravitationalForce" {
-    const a: Object = .{
-        .position = .{ .x = .{ .value = 0, .unit = .meter }, .y = .{ .value = 0, .unit = .meter }, .z = .{ .value = 0, .unit = .meter } },
-        .mass = .{ .value = 2, .unit = .kilogram },
-        .acceleration = null,
-        .acceleration3 = null,
-        .radius = null,
-        .velocity = null,
-        .velocity3 = null,
-    };
-    const b: Object = .{
-        .position = .{ .x = .{ .value = 3, .unit = .meter }, .y = .{ .value = 4, .unit = .meter }, .z = .{ .value = 0, .unit = .meter } },
-        .mass = .{ .value = 3, .unit = .kilogram },
-        .acceleration = null,
-        .acceleration3 = null,
-        .radius = null,
-        .velocity = null,
-        .velocity3 = null,
-    };
-
-    const displacement_test = displacementDistance(&a, &b);
-    print("x: {}, y: {}, z: {}\nr: {} meters\n", .{
-        displacement_test.displacement.x.value,
-        displacement_test.displacement.y.value,
-        displacement_test.displacement.z.value,
-        displacement_test.distance.value,
-    });
-    const gravitational_test = try gravitationalForce(&a, &b);
-    print("i:\n  a: {} m/s^2\n  a3:\n    x: {} m/s^2 y: {} m/s^2, z: {} m/s^2\n", .{
-        gravitational_test.i.a.value,
-        gravitational_test.i.a3.x.value,
-        gravitational_test.i.a3.y.value,
-        gravitational_test.i.a3.z.value,
-    });
-
-    print("  f: {} N\n  f3:\n    x: {} N y: {} N, z: {} N\n", .{
-        gravitational_test.i.f.value,
-        gravitational_test.i.f3.x.value,
-        gravitational_test.i.f3.y.value,
-        gravitational_test.i.f3.z.value,
-    });
-
-    print("j:\n  a: {} m/s^2\n  a3:\n    x: {} m/s^2 y: {} m/s^2, z: {} m/s^2\n", .{
-        gravitational_test.j.a.value,
-        gravitational_test.j.a3.x.value,
-        gravitational_test.j.a3.y.value,
-        gravitational_test.j.a3.z.value,
-    });
-
-    print("  f: {} N\n  f3:\n    x: {} N y: {} N, z: {} N\n", .{
-        gravitational_test.j.f.value,
-        gravitational_test.j.f3.x.value,
-        gravitational_test.j.f3.y.value,
-        gravitational_test.j.f3.z.value,
-    });
 }

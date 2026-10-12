@@ -140,6 +140,17 @@ pub const Position = struct {
     x: DistanceValue,
     y: DistanceValue,
     z: DistanceValue,
+
+    const Self = @This();
+
+    pub fn applyVelocityVector3(self: *Self, velocity: *const VelocityVector3, t: *const TimeValue) void {
+        self.x.value = self.x.toMeter() + (velocity.x.toMeterPerSecond() * t.toSecond());
+        self.x.unit = .meter;
+        self.y.value = self.y.toMeter() + (velocity.y.toMeterPerSecond() * t.toSecond());
+        self.y.unit = .meter;
+        self.z.value = self.z.toMeter() + (velocity.z.toMeterPerSecond() * t.toSecond());
+        self.z.unit = .meter;
+    }
 };
 
 pub const Velocity = struct {
@@ -155,7 +166,7 @@ pub const Velocity = struct {
 
     pub fn changeUnit(self: *const Self, unit: Distance) Self {
         return .{
-            .value = self.value * (Distance.toMeter(unit) / Distance.toMeter(self.unit)),
+            .value = self.value * (Distance.toMeter(self.unit) / Distance.toMeter(unit)),
             .unit = unit,
             .time = self.time,
         };
@@ -167,6 +178,12 @@ pub const Velocity = struct {
             .unit = self.unit,
             .time = unit,
         };
+    }
+
+    pub fn applyAcceleration(self: *Self, acceleration: *const Acceleration, t: *const TimeValue) void {
+        self.value = self.toMeterPerSecond() + acceleration.toMeterPerSecondSquared() * t.toSecond();
+        self.unit = .meter;
+        self.time = .second;
     }
 };
 
@@ -182,6 +199,14 @@ pub const VelocityVector3 = struct {
     x: Velocity,
     y: Velocity,
     z: Velocity,
+
+    const Self = @This();
+
+    pub fn applyAccelerationVector3(self: *Self, acceleration: *const AccelerationVector3, t: *const TimeValue) void {
+        self.x.applyAcceleration(&acceleration.x, t);
+        self.y.applyAcceleration(&acceleration.y, t);
+        self.z.applyAcceleration(&acceleration.z, t);
+    }
 };
 
 pub fn addVelocityVector3(a: *const VelocityVector3, b: *const VelocityVector3) VelocityVector3 {
@@ -205,7 +230,7 @@ pub const Acceleration = struct {
 
     pub fn changeUnit(self: *const Self, unit: Distance) Self {
         return .{
-            .value = self.value * (Distance.toMeter(unit) / Distance.toMeter(self.unit)),
+            .value = self.value * (Distance.toMeter(self.unit) / Distance.toMeter(unit)),
             .unit = unit,
             .time = self.time,
         };
@@ -216,6 +241,14 @@ pub const Acceleration = struct {
             .value = self.value * (Time.toSecond(unit) * Time.toSecond(unit)) / (Time.toSecond(self.time) * Time.toSecond(self.time)),
             .unit = self.unit,
             .time = unit,
+        };
+    }
+
+    pub fn toVelocity(self: *const Self, t: *const TimeValue) Velocity {
+        return .{
+            .value = self.toMeterPerSecondSquared() * t.toSecond(),
+            .unit = .meter,
+            .time = .second,
         };
     }
 };
@@ -231,6 +264,16 @@ pub const AccelerationVector3 = struct {
     x: Acceleration,
     y: Acceleration,
     z: Acceleration,
+
+    const Self = @This();
+
+    pub fn toVelocityVector3(self: *const Self, t: *const TimeValue) VelocityVector3 {
+        return .{
+            .x = self.x.toVelocity(t),
+            .y = self.y.toVelocity(t),
+            .z = self.z.toVelocity(t),
+        };
+    }
 };
 
 pub fn addAccelerationVector3(a: *const AccelerationVector3, b: *const AccelerationVector3) AccelerationVector3 {
@@ -271,4 +314,4 @@ pub fn addForceVector3(a: *const ForceVector3, b: *const ForceVector3) ForceVect
 
 // =============== CONSTANTS =================
 
-pub const g_constant: f128 = 0.00000000006674;
+pub const g_constant: f128 = 6.6743e-11;
