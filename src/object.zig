@@ -41,17 +41,27 @@ pub const Object = struct {
 
     pub fn drift(self: *Self, half_timestep: *const TimeValue) void {
         self.position.applyVelocityVector3(&self.velocity3, half_timestep);
-        self.acceleration3 = .{
-            .x = .{ .value = 0, .unit = .meter, .time = .second },
-            .y = .{ .value = 0, .unit = .meter, .time = .second },
-            .z = .{ .value = 0, .unit = .meter, .time = .second },
-        };
     }
 
-    pub fn print(self: *const Self) void {
+    pub fn print(self: *const Self) struct {
+        f128,
+        f128,
+        f128,
+        f128,
+        f128,
+        f128,
+        f128,
+        f128,
+        f128,
+        f128,
+        f128,
+    } {
         const str =
             \\name: {s}
-            \\  position: x: {} y: {} z: {}
+            \\  position:
+            \\    x: {}
+            \\    y: {}
+            \\    z: {}
             \\  mass: {} kg
             \\  radius: {} tonne
             \\  velocity: {} m/s
@@ -73,24 +83,50 @@ pub const Object = struct {
         // \\    z: {} N\n
         debugPrint(str, .{
             self.name,
-            @trunc(self.mass.toKilogram()),
-            @trunc(self.radius.toMeter()),
-            @trunc(self.position.x.toMeter()),
-            @trunc(self.position.y.toMeter()),
-            @trunc(self.position.z.toMeter()),
-            @trunc(self.velocity.toMeterPerSecond()),
-            @trunc(self.velocity3.x.toMeterPerSecond()),
-            @trunc(self.velocity3.y.toMeterPerSecond()),
-            @trunc(self.velocity3.z.toMeterPerSecond()),
-            @trunc(self.acceleration.toMeterPerSecondSquared()),
-            @trunc(self.acceleration3.x.toMeterPerSecondSquared()),
-            @trunc(self.acceleration3.y.toMeterPerSecondSquared()),
-            @trunc(self.acceleration3.z.toMeterPerSecondSquared()),
-            // @trunc(self.force.toNewton()),
-            // @trunc(self.force3.x.toNewton()),
-            // @trunc(self.force3.y.toNewton()),
-            // @trunc(self.force3.z.toNewton()),
+            self.position.x.toMeter(),
+            self.position.y.toMeter(),
+            self.position.z.toMeter(),
+            self.mass.toKilogram(),
+            self.radius.toMeter(),
+            self.velocity.toMeterPerSecond(),
+            self.velocity3.x.toMeterPerSecond(),
+            self.velocity3.y.toMeterPerSecond(),
+            self.velocity3.z.toMeterPerSecond(),
+            self.acceleration.toMeterPerSecondSquared(),
+            self.acceleration3.x.toMeterPerSecondSquared(),
+            self.acceleration3.y.toMeterPerSecondSquared(),
+            self.acceleration3.z.toMeterPerSecondSquared(),
+            // @trunc(self.position.x.toMeter()),
+            // @trunc(self.position.y.toMeter()),
+            // @trunc(self.position.z.toMeter()),
+            // @trunc(self.mass.toKilogram()),
+            // @trunc(self.radius.toMeter()),
+            // @trunc(self.velocity.toMeterPerSecond()),
+            // @trunc(self.velocity3.x.toMeterPerSecond()),
+            // @trunc(self.velocity3.y.toMeterPerSecond()),
+            // @trunc(self.velocity3.z.toMeterPerSecond()),
+            // @trunc(self.acceleration.toMeterPerSecondSquared()),
+            // @trunc(self.acceleration3.x.toMeterPerSecondSquared()),
+            // @trunc(self.acceleration3.y.toMeterPerSecondSquared()),
+            // @trunc(self.acceleration3.z.toMeterPerSecondSquared()),
+            // self.force.toNewton()),
+            // self.force3.x.toNewton()),
+            // self.force3.y.toNewton()),
+            // self.force3.z.toNewton()),
         });
+        return .{
+            self.position.x.toMeter(),
+            self.position.y.toMeter(),
+            self.position.z.toMeter(),
+            self.velocity.toMeterPerSecond(),
+            self.velocity3.x.toMeterPerSecond(),
+            self.velocity3.y.toMeterPerSecond(),
+            self.velocity3.z.toMeterPerSecond(),
+            self.acceleration.toMeterPerSecondSquared(),
+            self.acceleration3.x.toMeterPerSecondSquared(),
+            self.acceleration3.y.toMeterPerSecondSquared(),
+            self.acceleration3.z.toMeterPerSecondSquared(),
+        };
     }
 };
 
